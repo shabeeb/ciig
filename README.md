@@ -1,4 +1,4 @@
-ciig
+ciig -CI-Ignator
 ====
 
 codignator scaffolder for developers
