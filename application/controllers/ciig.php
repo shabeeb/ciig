@@ -717,7 +717,7 @@ $title_msg = ($id == 0) ? "Create" : " Update";
 if (!defined("BASEPATH"))
     exit(\'No direct script access allowed\');
 
-class ' . ucfirst($this->modelname) . ' extends SYS_Model { 
+class ' . ucfirst($this->modelname) . ' extends CI_Model { 
                 
                 
                 
