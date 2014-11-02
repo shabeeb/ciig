@@ -13,10 +13,18 @@ class ciig extends CI_Controller {
     private $first_min_no = 5;
     private $style_col = 4;
     private $auther = "Shabeeb";
-    private $auther_mail = "me@shabeebk.com";
+    private $auther_mail = "mail@shabeebk.com";
     private $created_date;
     private $header = 'header';
     private $footer = 'footer';
+    private $header_data = '';
+    private $footer_data = 'footer';
+    private $controller_data = '';
+    private $model_data = '';
+    private $create_data = '';
+    private $list_data = '';
+    private $library_list = array("form_validation", "session");
+    private $helper_list = array("url");
 
     public function __construct() {
 
@@ -37,7 +45,7 @@ class ciig extends CI_Controller {
      * 
      * load the form and process
      * 
-     * @auther shabeeb <me@shabeebk.com>
+     * @auther shabeeb <mail@shabeebk.com>
      * @createdon  17-06-2014
      * @
      * 
@@ -54,7 +62,7 @@ class ciig extends CI_Controller {
         $this->form_validation->set_rules('tname', 'Table Name', 'required|xss_clean');
         $this->form_validation->set_rules('cname', 'Controller Name', 'required|xss_clean');
         $this->form_validation->set_rules('fname', 'Title Name', 'required|xss_clean');
-        $this->form_validation->set_rules('tname', 'Table Name', 'required|xss_clean');
+        // $this->form_validation->set_rules('tname', 'Table Name', 'required|xss_clean');
         if ($this->form_validation->run() === FALSE) {
             
         } else {
@@ -73,7 +81,7 @@ class ciig extends CI_Controller {
 
             if (empty($fields)) {
 
-                die("table not existing");
+                die("Table not existing");
             }
 
             foreach ($fields as $field) {
@@ -87,12 +95,12 @@ class ciig extends CI_Controller {
 
 
 
-            $controller = $this->build_controller($fields);
-            $view_create = $this->build_view_create($fields);
-            $model = $this->build_model($fields);
-            $view_list = $this->build_view_listing($fields);
-            $view_header = $this->build_header($fields);
-            $view_footer = $this->build_footer($fields);
+            $this->controller_data = $controller = $this->build_controller($fields);
+            $this->create_data = $view_create = $this->build_view_create($fields);
+            $this->model_data = $model = $this->build_model($fields);
+            $this->list_data = $view_list = $this->build_view_listing($fields);
+            $this->header_data = $view_header = $this->build_header($fields);
+            $this->footer_data = $view_footer = $this->build_footer($fields);
 
             $data['model'] = $model;
             $data['controller'] = $controller;
@@ -100,7 +108,7 @@ class ciig extends CI_Controller {
             $data['view_list'] = $view_list;
             $data['view_header'] = $view_header;
             $data['view_footer'] = $view_footer;
-            
+
             //name for each file
             $data['controllername'] = $this->controllername;
             $data['modelname'] = $this->modelname;
@@ -108,6 +116,14 @@ class ciig extends CI_Controller {
             $data['create_viewname'] = $this->create_viewname;
             $data['header'] = $this->header;
             $data['footer'] = $this->footer;
+            $data['tname'] = $this->tname;
+            $data['fname'] = $this->fname;
+            $data['cname'] = $cname;
+           // print_r($_POST);
+            if (isset($_POST['download'])) {
+              
+                $this->download();
+            }
         }
 
 
@@ -138,12 +154,35 @@ class ciig extends CI_Controller {
             return FALSE;
         }
 
+        $library_list = $this->library_list;
+        $helper_list = $this->helper_list;
+
         $controller = '<?php
         class ' . ucfirst($this->controllername) . ' extends CI_Controller {
 
         public function __construct() {
                 parent::__construct();
-                $this->load->model(\'' . $this->modelname . '\');
+               
+               ';
+        if (!empty($library_list)) {
+            foreach ($library_list as $lib) {
+
+                $controller .= ' $this->load->library("' . $lib . '" ); 
+                    ';
+            }
+        }
+
+
+        if (!empty($helper_list)) {
+            foreach ($helper_list as $help) {
+                $controller .= ' $this->load->helper("' . $help . '" ); 
+                    ';
+            }
+        }
+        //$this->load->helper('url');
+
+
+        $controller .= ' $this->load->model(\'' . $this->modelname . '\');
             
         }
 
@@ -162,7 +201,7 @@ class ciig extends CI_Controller {
      * @return type
      * exceptions
      *
-     * Created Usigng CIIgnator 
+     * Created Using CIIgnator 
      * 
      */
      
@@ -192,14 +231,14 @@ class ciig extends CI_Controller {
      * @return type
      * exceptions
      *
-     * Created Usigng CIIgnator 
+     * Created Using CIIgnator 
      * 
      */
 
     public function create() {			
             $data[\'id\']= 0;
            
-            $this->load->view(\'' . $this->header . '\');
+           $this->load->view(\'' . $this->header . '\');
            $this->load->view(\'' . $this->create_viewname . '\',$data);
            $this->load->view(\'' . $this->footer . '\');
 
@@ -219,7 +258,7 @@ class ciig extends CI_Controller {
      * @return type
      * exceptions
      *
-     * Created Usigng CIIgnator 
+     * Created Using CIIgnator 
      * 
      */
          public function edit($id=0) {
@@ -258,7 +297,7 @@ class ciig extends CI_Controller {
      * @return type
      * exceptions
      *
-     * Created Usigng CIIgnator 
+     * Created Using CIIgnator 
      * 
      */
       public function process_form(){
@@ -334,15 +373,17 @@ class ciig extends CI_Controller {
         if(isset($id) && !empty($id)){
 
             $condition = array("' . $this->tbl_pk . '"=>$id);
-            $insert = $this->' . $this->modelname . '->update(\'' . $this->tname . '\',$data_inser_array,$condition);
+           // $insert = $this->' . $this->modelname . '->update(\'' . $this->tname . '\',$data_inser_array,$condition);
+            $insert = $this->db->update(\'' . $this->tname . '\',$data_inser_array,$condition);
             $data[] = "Data Updated Successfully.";
             $this->session->set_flashdata(\'smessage\',"Data Updated Successfully");
             $message[\'is_redirect\'] =true;
           }else{
-            $insert = $this->' . $this->modelname . '->create(\'' . $this->tname . '\',$data_inser_array);
+            //$insert = $this->' . $this->modelname . '->create(\'' . $this->tname . '\',$data_inser_array);
+            $insert = $this->db->insert(\'' . $this->tname . '\',$data_inser_array);
             $message[\'is_redirect\'] =true;
 
-            $data[] = "Data Inserted Successfully.";
+            $data = "Data Inserted Successfully.";
           }
           if($insert){
           
@@ -352,7 +393,7 @@ class ciig extends CI_Controller {
           }else{
             $message[\'is_error\'] =true;
             $message[\'is_redirect\'] =false;
-            $data[] = "Something Went Wrong..";
+            $data = "Something Went Wrong..";
           }
 
           }
@@ -384,7 +425,7 @@ class ciig extends CI_Controller {
             * @return type
             * exceptions
             *
-            * Created Usigng CIIgnator 
+            * Created Using CIIgnator 
             * 
             */
 
@@ -434,7 +475,58 @@ class ciig extends CI_Controller {
 		exit; 
 	}';
 
+ $controller .= '  
 
+        /**
+            * Functon remove_form
+            * 
+            * process grid data 
+            * 
+            * @auther ' . $this->auther . ' <' . $this->auther_mail . '>
+            * @createdon   : ' . $this->created_date . '
+            * @
+            * 
+            * @param type 
+            * @return type
+            * exceptions
+            *
+            * Created Using CIIgnator 
+            * 
+            */
+
+            
+
+public function remove_form() {
+
+        $message["is_error"] = true;
+        $pid = $this->input->post("id" );
+       
+        if (!empty($pid)) {
+            $data = $this->employee_model->findByPk($pid);
+
+            $condition = array("'.$this->tbl_pk.'" => $pid);
+           // $params = array("is_active" => 0);
+
+
+
+            $insert = $this->db->delete("' . $this->tname . '", $condition);
+
+            $message["is_error"] = false;
+            $data[] = "Entry Removed Successfully";
+           $this->session->set_flashdata("Entry Removed Successfully", "sucess");
+        } else {
+            $data[] = "Entry Not Existing";
+            $this->session->set_flashdata("Entry Not Existing", "error");
+        }
+
+        $message["data"] = $data;
+        echo json_encode($message);
+        exit;
+    
+    
+
+
+	}';
 
         $controller .= '  }';
 
@@ -509,9 +601,9 @@ $title_msg = ($id == 0) ? "Create" : " Update";
 
                 $label = str_replace('_', ' ', $field_name);
 
-               
 
-                $view .= '   <div class="col-lg-'.$this->style_col.'">  
+
+                $view .= '   <div class="col-lg-' . $this->style_col . '">  
                                     <label>' . ucfirst($label) . '*</label>
                                     <div class="field">
 
@@ -520,9 +612,6 @@ $title_msg = ($id == 0) ? "Create" : " Update";
  
                                     </div>
                              </div>';
-
-
-               
             }
         }
 
@@ -565,7 +654,7 @@ $title_msg = ($id == 0) ? "Create" : " Update";
         }
         $.ajax({
             type: "post",
-            url: base_url + "' . $this->controllername . '/process_form",
+            url: base_url + "/' . $this->controllername . '/process_form",
             cache: false,
             data: $(\'#' . $this->controllername . '\').serialize(),
             success: function(json) {
@@ -583,11 +672,11 @@ $title_msg = ($id == 0) ? "Create" : " Update";
                     $(\'#smessage\').addClass("secondary").removeClass(\'danger\');
                     $(\'#smessage\').show();
                     if (is_redirect == true) {
-                        window.location = base_url + \'' . $this->controllername . '\';
+                        window.location = base_url + \'/' . $this->controllername . '\';
                     }
                 } else {
                     if (is_redirect == true) {
-                        window.location = base_url + \'' . $this->controllername . '\';
+                        window.location = base_url + \'/' . $this->controllername . '\';
                     }
                     if (error_count != 0) {
                         $("#smessage").html("There are " + error_count + "  errors.please fix all");
@@ -632,7 +721,7 @@ $title_msg = ($id == 0) ? "Create" : " Update";
                  
                  
     <script type="text/javascript">
-        var base_url = "";//mention your base url here
+        //var base_url = "";//mention your base url here
         $(document).ready(function() {
 
         $("#dataTable").dataTable({
@@ -640,7 +729,7 @@ $title_msg = ($id == 0) ? "Create" : " Update";
             "sPaginationType": "full_numbers",
             "bProcessing": true,
             "bServerSide": true,
-            "sAjaxSource": base_url + "' . $this->controllername . '/list_all_data",
+            "sAjaxSource": base_url + "/' . $this->controllername . '/list_all_data",
             "aoColumns": [';
         $i = 0;
         foreach ($fields as $field) {
@@ -663,8 +752,8 @@ $title_msg = ($id == 0) ? "Create" : " Update";
                     "bSortable": false,
                     "mRender": function(data, type, full)
                     {
-                        var edit = \'<td><a href="\' + base_url + \'' . $this->controllername . '/edit/\' + full.' . $this->tbl_pk . '+\'" class="edit"><i class="icon-edit"></i></a>\' +
-                                \'  <a href="\' + base_url + \'' . $this->controllername . '/remove_form" id="\' + full.' . $this->tbl_pk . ' + \'" data-id ="\' + full.' . $this->tbl_pk . ' + \'" class="delete-confirm" ><i class="icon-delete"></i></a>\'                           
+                        var edit = \'<td><a href="\' + base_url + \'/' . $this->controllername . '/edit/\' + full.' . $this->tbl_pk . '+\'" class="edit"><i class="icon-edit">edit</i></a>\' +
+                                \'  <a href="\' + base_url + \'/' . $this->controllername . '/remove_form" id="\' + full.' . $this->tbl_pk . ' + \'" data-id ="\' + full.' . $this->tbl_pk . ' + \'" class="delete-confirm" ><i class="icon-delete">delete</i></a>\'                           
                                                            
                                 + \'</td>\'
                             ;
@@ -673,6 +762,35 @@ $title_msg = ($id == 0) ? "Create" : " Update";
                 ],
          });
 
+
+$(document).on("click", ".delete-confirm", function(e) {
+
+            e.stopPropagation();
+            e.preventDefault();
+            var url = $(this).attr("href");
+            var data_id = $(this).attr("data-id");
+            //html div with id  dialog-confirm placed in footer file
+            var conf = confirm("Are you sure to delete this value?");
+            if (conf) {
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    cache: false,
+                    data: {id: data_id},
+                    success: function(json) {
+                        $("#dataTable").dataTable().fnClearTable();
+                    },
+                    error: function() {
+                        alert("Something Went wrong...");
+                    }
+                });
+            }
+
+            return false;
+        });
+        
+        
+        
         });
     </script>
 ';
@@ -775,7 +893,7 @@ class ' . ucfirst($this->modelname) . ' extends CI_Model {
      * @return type array
      * exceptions
      *
-     * Created Usigng CIIgnator 
+     * Created Using CIIgnator 
      * 
      */
      
@@ -812,7 +930,7 @@ class ' . ucfirst($this->modelname) . ' extends CI_Model {
      * @return type
      * exceptions
      *
-     * Created Usigng CIIgnator 
+     * Created Using CIIgnator 
      * 
      */
      
@@ -822,13 +940,13 @@ class ' . ucfirst($this->modelname) . ' extends CI_Model {
  	$this->db->select($this->sort_colums_order);
  	$this->db->from($this->_table);
  	
- 	$where = "is_active = 1";
+ 	//$where = "is_active = 1";
  	if(!empty($search)){
  		$search = mysql_escape_string($search);		
  	}
         
   		
- 	$this->db->where($where, NULL, FALSE);
+ 	//$this->db->where($where, NULL, FALSE);
  	$this->db->order_by($sort_field,$sortby);
  	$this->db->limit($limit,$start);
  	$query = $this->db->get();
@@ -847,13 +965,13 @@ class ' . ucfirst($this->modelname) . ' extends CI_Model {
             
                 $this->db->select("COUNT(*) AS numrows");
                 $this->db->from($this->_table);
-                $where = "is_active = 1";
+                //$where = "is_active = 1";
                         if(!empty($search)){
                         //search condition      
                         }
                          
 
-                $this->db->where($where, NULL, FALSE);
+                //$this->db->where($where, NULL, FALSE);
                 return $this->db->get()->row()->numrows;
                 }
 
@@ -879,29 +997,30 @@ class ' . ucfirst($this->modelname) . ' extends CI_Model {
         <link rel="icon" href="../../favicon.ico">
 
         <title>Ciignator for Bootstrap</title>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="//cdn.datatables.net/1.10.1/js/jquery.dataTables.min.js"></script>
-        <link rel="stylesheet" href="//cdn.datatables.net/1.10.1/css/jquery.dataTables.css">
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="http://cdn.datatables.net/1.10.3/js/jquery.dataTables.min.js"></script>
+        <link rel="stylesheet" href="http://cdn.datatables.net/1.10.3/css/jquery.dataTables.min.css">
         <!-- Bootstrap core CSS -->
         <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 
         <!-- Optional theme -->
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-      
-        <!-- Latest compiled and minified JavaScript -->
-        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
 
-        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
         <script src="http://www.position-relative.net/creation/formValidator/js/jquery-1.7.2.min.js" type="text/javascript" charset="utf-8">
         </script>
-        <script src="http://www.position-relative.net/creation/formValidator/js/languages/jquery.validationEngine-en.js" type="text/javascript" charset="utf-8">
-	  <link rel="stylesheet" href="http://www.position-relative.net/creation/formValidator/css/validationEngine.jquery.css">
-
-        </script>
+        <script src="http://www.position-relative.net/creation/formValidator/js/languages/jquery.validationEngine-en.js" type="text/javascript" charset="utf-8"></script>
+        <link rel = "stylesheet" href = "http://www.position-relative.net/creation/formValidator/css/validationEngine.jquery.css" />
         <script src="http://www.position-relative.net/creation/formValidator/js/jquery.validationEngine.js" type="text/javascript" charset="utf-8">
         </script>
-
+        <script src="http://cdn.datatables.net/1.10.3/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+            var base_url = "<?php echo site_url(); ?>";
+            </script>
     </head>
 
     <body>
@@ -927,6 +1046,49 @@ class ' . ucfirst($this->modelname) . ' extends CI_Model {
                     </body>
                     </html>';
         return $footer;
+    }
+
+    function download() {
+
+        //$this->controller_data = $controller = $this->build_controller($fields);
+        //// $this->create_data = $view_create = $this->build_view_create($fields);
+        /// $this->model_data = $model = $this->build_model($fields);
+        // $this->list_data
+
+
+
+        $this->load->library('zip');
+        $controller_date = $this->controller_data;
+        $model_date = $this->model_data;
+        $create_view_date = $this->create_data;
+        $create_list_date = $this->list_data;
+        $header_date = $this->header_data;
+        $footer_date = $this->footer_data;
+
+        $controller_file_name = 'controllers/' . $this->controllername . '.php';
+        $model_file_name = 'models/' . $this->modelname . '.php';
+        $createview_file_name = 'views/' . $this->create_viewname . '.php';
+        $listview_file_name = 'views/' . $this->listviewname . '.php';
+
+
+
+        $header_file_name = 'views/' . $this->header . '.php';
+        $footer_file_name = 'views/' . $this->footer . '.php';
+        $this->zip->add_data($controller_file_name, $controller_date);
+        $this->zip->add_data($model_file_name, $model_date);
+        $this->zip->add_data($createview_file_name, $create_view_date);
+        $this->zip->add_data($listview_file_name, $create_list_date);
+
+        //header and footer
+        $this->zip->add_data($header_file_name, $header_date);
+        $this->zip->add_data($footer_file_name, $footer_date);
+
+// Write the zip file to a folder on your server. Name it "my_backup.zip"
+        $this->zip->archive('temp/' . $this->controllername . '.zip');
+
+// Download the file to your desktop. Name it "my_backup.zip"
+        $this->zip->download($this->controllername . '.zip');
+        //force_download($name, $data);
     }
 
 }
