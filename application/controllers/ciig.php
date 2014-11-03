@@ -6,7 +6,7 @@ class ciig extends CI_Controller {
     private $controllername; // controller name
     private $fname; // form name
     private $form_title; // form tite
-    private $modelname;
+    private $modelname;// model tite
     private $listviewname;
     private $create_viewname;
     private $tbl_pk;
@@ -334,7 +334,7 @@ class ciig extends CI_Controller {
                $message[\'is_redirect\'] =false;
                 $err =  validation_errors();
                 //$err =  $this->form_validation->_error_array();
-                $data[] = $err;
+                $data = $err;
                 $count = count($this->form_validation->error_array());
                 $message[\'error_count\'] =$count;
           }else{ ';
@@ -375,7 +375,7 @@ class ciig extends CI_Controller {
             $condition = array("' . $this->tbl_pk . '"=>$id);
            // $insert = $this->' . $this->modelname . '->update(\'' . $this->tname . '\',$data_inser_array,$condition);
             $insert = $this->db->update(\'' . $this->tname . '\',$data_inser_array,$condition);
-            $data[] = "Data Updated Successfully.";
+            $data = "Data Updated Successfully.";
             $this->session->set_flashdata(\'smessage\',"Data Updated Successfully");
             $message[\'is_redirect\'] =true;
           }else{
@@ -620,10 +620,12 @@ $title_msg = ($id == 0) ? "Create" : " Update";
                                             
                                             
                                             
-                                             <div class="medium primary btn fright">
+                                                   
+                                    <div class="col-lg-2" style="padding-top: 2.2%">
                                         <input name="insured_group"
-                                               id="add_insuere_group" class="" value="<?php echo $btn_msg ?>" type="submit" />
+                                               id="add_insuere_group" class="btn  btn-default" value="<?php echo $btn_msg ?>" type="submit" />
                                     </div>
+                                   
                                             
                                     
 
