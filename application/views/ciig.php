@@ -100,12 +100,13 @@
                         <label>Form title</label>  <input type="text" name="fname"  class="form-control"   placeholder="Form title" value="<?php echo set_value('fname'); //echo $fname = empty($fname) ? "" : $fname; ?>" >
                     </div>
                     <br />
-                    <div id="body"  class="col-lg-2">
-                        <input type="submit" name="submit" class="btn btn-lg btn-primary btn-block" value="submit">
+                    <div id="body"  class="col-lg-3">
+                        <input type="submit" name="submit" class="btn btn-lg btn-primary" value="submit">
+                        <input type="submit" name="download" class="btn btn-lg btn-primary " value="Dowload">
                     </div>
 
                     <div id="body"  class="col-lg-2">
-                        <input type="submit" name="download" class="btn btn-lg btn-primary btn-block" value="Dowload">
+                        
                     </div>
                 </form>
 
